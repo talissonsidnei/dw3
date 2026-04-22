@@ -1,47 +1,77 @@
-// @file: src/CONTROLLER/tarefa.controller.js
+// @file: src/controllers/tarefa.controller.js
 
-// DADOS (array de tarefas) - movido para o controlador para ser acessado no processamento das requisições
-const tarefas = [
-  { id: 1, descricao: "Fazer compras", concluido: false },
-  { id: 2, descricao: "Lavar o carro", concluido: false },
-  { id: 3, descricao: "Estudar Fastify", concluido: true }
-]
+import * as model from '../models/tarefa.model.js'
 
-
-// Processa requisições da rota `GET /tarefas`
+// GET /tarefas
 export async function listarTarefas(request, reply) {
-  // LOG para indicar que a função foi chamada
-  console.log("Controller: listarTarefas chamado")
-
-  const { busca, concluido } = request.query
-  let resultado = tarefas
-  if (busca) {
-    resultado = resultado.filter(t =>
-      t.descricao.toLowerCase().includes(busca.toLowerCase())
-    )
-  }
-  if (concluido !== undefined) {
-    const concluidoBool = concluido === 'true'
-    resultado = resultado.filter(t => t.concluido === concluidoBool)
-  }
+  const resultado = model.listar(request.query)
   return reply.send(resultado)
 }
 
+// POST /tarefas
+export async function criarTarefa(request, reply) {
+  const { descricao } = request.body
 
-    // Processa requisições da rota `POST /tarefas`
-    export async function criarTarefa(request, reply) { }
+  if (!descricao || descricao.trim() === '') {
+    return reply.status(400).send({
+      status: 'error',
+      message: 'A descrição da tarefa é obrigatória'
+    })
+  }
 
-    // Processa requisições da rota `GET /tarefas/resumo`
-    export async function obterResumo(request, reply) { }
+  const nova = model.criar(descricao)
+  return reply.status(201).send(nova)
+}
 
-    // Processa requisições da rota `GET /tarefas/:id`
-    export async function obterTarefa(request, reply) { }
+// GET /tarefas/resumo
+export async function obterResumo(request, reply) {
+  return reply.send(model.resumo())
+}
 
-    // Processa requisições da rota `PATCH /tarefas/:id`
-    export async function atualizarTarefa(request, reply) { }
+// GET /tarefas/:id
+export async function obterTarefa(request, reply) {
+  const id = Number(request.params.id)
+  const tarefa = model.buscarPorId(id)
 
-    // Processa requisições da rota `PATCH /tarefas/:id/concluir`
-    export async function concluirTarefa(request, reply) { }
+  if (!tarefa) {
+    return reply.status(404).send({ status: 'error', message: 'Tarefa não encontrada' })
+  }
 
-    // Processa requisições da rota `DELETE /tarefas/:id`
-    export async function removerTarefa(request, reply) { }
+  return reply.send(tarefa)
+}
+
+// PATCH /tarefas/:id
+export async function atualizarTarefa(request, reply) {
+  const id = Number(request.params.id)
+  const tarefa = model.atualizar(id, request.body)
+
+  if (!tarefa) {
+    return reply.status(404).send({ status: 'error', message: 'Tarefa não encontrada' })
+  }
+
+  return reply.send(tarefa)
+}
+
+// PATCH /tarefas/:id/concluir
+export async function concluirTarefa(request, reply) {
+  const id = Number(request.params.id)
+  const tarefa = model.alternarConcluido(id)
+
+  if (!tarefa) {
+    return reply.status(404).send({ status: 'error', message: 'Tarefa não encontrada' })
+  }
+
+  return reply.send(tarefa)
+}
+
+// DELETE /tarefas/:id
+export async function removerTarefa(request, reply) {
+  const id = Number(request.params.id)
+  const removido = model.remover(id)
+
+  if (!removido) {
+    return reply.status(404).send({ status: 'error', message: 'Tarefa não encontrada' })
+  }
+
+  return reply.status(204).send()
+}
