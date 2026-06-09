@@ -1,0 +1,13 @@
+{
+  "name": "meu-projeto-tarefas",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env --watch src/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.2.0",
+    "fastify": "^5.8.5",
+    "pg": "^8.21.0"
+  }
+}
